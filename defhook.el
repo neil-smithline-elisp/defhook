@@ -1,3 +1,53 @@
+;;; defhook.el --- Declare hook functionality rather dynamically implementing it.
+;; 
+;; Author: Neil Smithline
+;; Maintainer: Neil Smithline
+;; Copyright (C) 2012, Neil Smithline, all rights reserved.
+;; Created: Sun May 27 09:24:41 2012 (-0400)
+;; Version: 1.0-pre1
+;; Last-Updated: 
+;;           By: 
+;;     Update #: 0
+;; URL: 
+;; Keywords: elisp, utility, modes
+;; Compatibility: Universal
+;; 
+;; Features that might be required by this library:
+;;
+;;   custom
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;;; Commentary: 
+;; 
+;; 
+;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;;; Change Log:
+;; 
+;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 3, or
+;; (at your option) any later version.
+;; 
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;; 
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+;; Floor, Boston, MA 02110-1301, USA.
+;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 
+;;; Code:
+
 (defgroup defhook nil "Define mode hooks wherever you want." 
   :link '(function-link defhook))
 
@@ -604,7 +654,8 @@ While no promises can be made in the face of a broken init file,
 this function tries to make sure that `emacs-startup-hook' has
 been called exactly once.
 
-Calling `defhook-startup' if `emacs-startup-hook' has run successfully will do nothing. "
+Calling `defhook-startup' if `emacs-startup-hook' has run
+successfully will do nothing."
   (interactive) 
   (unless defhook-emacs-startup-hook-monitor
     (run-hooks 'emacs-startup-hook)))
@@ -641,144 +692,3 @@ Calling `defhook-startup' if `emacs-startup-hook' has run successfully will do n
       (font-lock-add-keywords nil defhook-font-lock-keywords))))
 
 (provide 'defhook)
-
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;; THE FOLLOWING CODE IS COMMENTED OUT
-;;;
-;;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(unless :Comment-not-yet-implemented
-
-
-(defmacro defhook-startup-hook-monitor (func-sym)
-    "Internally used by `defhook' to track execution of startup hooks.
-Unless you're name is `defhook' don't use this.
-
-By categorizing hooks based on when they are run, the need for
-special handling of `emacs-startup-hook' becomes more
-apparent. Note that Emacs categorizes based on whether the hook
-functions are passed arguments or not (see Info
-node `(elisp)Hooks'). These two categorizations are valid,
-independent, and orthogonal of each other. 
-
-The most common hooks are \"mode hooks\". For this
-categorization, a mode hook is any hook that is triggered by the
-entering or exiting of a specific mode. `shell-mode-hook' and
-`view-mode-hook' are common examples. 
-
-I'll use the term \"event hooks\" to describe any hook that is
-neither a mode hook nor a \"lifecycle hook\" (defined
-below). These hooks are run when a specific event occurs. For
-example, `write-file-hooks' occur whenever you are writing a
-file, `after-undo-hook' occurs after every undo operation, and
-`exit-language-environment-hook' occurs whenever you change the
-current language (written language, not programming language).
-
-\"Lifecycle hooks\" are run at specific points in the lifecycle
-of Emacs and only at those times. for example,
-`emacs-startup-hook', probably the most common lifetime hook, is
-run after Emacs has been started and has completed reading the
-initialization files. `after-init-hook' is another lifecycle
-hook. While there may be exceptions, the key concept behind
-lifecycle hooks is that, under normal circumstances, they are run
-exactly once.
-
-Mode hooks are run every time the associated modes are
-entered. For example, every time you load a \".java\" file, the
-`java-mode-hook' functions are executed. You can even force
-re-execution of the hooks by executing
-\"\\[execute-extended-command] java-mode\" while in a buffer that
-is already in `java-mode'.
-
-Other lifecycle hooks, such as `before-make-frame-hook', may not
-work if run a second time on the same frame, but they are still
-run every time a frame is created.
-
-Writing and debugging a lifecycle hook such as
-`emacs-startup-hook' generally involves exiting and restarting
-Emacs ot test the hook's functionality. While less than ideal,
-this is not a major problem. But `defhook' encourages
-implementing multipe hook functions, frequently throughout one or
-more elisp files, for the same hook. While this provides you with
-a means of colocating the the functionality implemented in a hook
-with the code that requires that functionality, it does increase
-the burden of testing lifecycle hooks.
-
-As such, `defhook' tries to help you out by keeping track of
-lifecycle hooks (currently only `emacs-startup-hook') and using
-that information to allow testing of Emacs lifecycle hooks
-without recreating the actual lifecycle event.
-
-I am continually frustrated when I start emacs and my startup
-fails due to a stray character inside of my initialization
-file (typically an \"xo\"). I want to fix the typo and the just
-execute \\[eval-buffer] but this doesn't run the lifecycle hooks
-that would have been run in a normal startup."
-    ;; Imagine clever code here.
-
-    (unless (assoc func-sym defhook-startup-hook-monitor))
-    
-
-    )
-
-
-(defvar defhook-hook-status nil 
-  "Status of hooks `defhook' has created and when they've been run.
-An association list used to maintain the current status of
-hooks created by `defhook'. For example:
-    ((emacs-startup-hook . <hook-function information>) 
-     (lisp-interaction-mode . <hook-function information>)
-     (find-file-hook . <hook-function information>)
-     ......)
-
-Only hooks that have been passed to defhook will have entries. No
-hook will have more than one entry. The ordering of the hooks in
-the association list is undefined.
-
-Each <hook-function information> is an association list whose key
-is a function that `defhook' has generated. Every generated
-function will be the key of exactly one hook-function information
-in the association list. For example, the entry in
-`defhook-hook-status' for `emacs-startup-hook' could be:
-    (emacs-startup-hook . 
-        ((ngs:emacs-startup-hook:bind-fill-paragraph . <details>)
-         (ngs:emacs-startup-hook:configure-buffer-mngmt . <details>)
-         (ngs:emacs-startup-hook:dired-settings . <details>)))
-
-The <details> for each hook function are documented in the
-code (sorry but they are changing faster than I want to bother to
-update this documentation :-D).")
-
-(defun defhook-update-hook-status (func-sym hook-sym status)
-  "Update defhook-hook-status for FUNC-SYM of HOOK-SYM with STATUS.
-`defhook' will directly or indirectly call
-`defhook-update-hook-status' with one of the following values:
-
-'created:  FUNC-SYM was created and added to HOOK-SYM
-'deleted:  FUNC-SYM was removed from HOOK-SYM
-'updated:  FUNC-SYM which was in HOOK-SYM, was updated
-'executed: FUNC-SYM in HOOK-SYM was executed, presumably by `run-hooks'
-
-Any other value is illegal."
-  (assert (memq status '(created deleted updated executed)) t)
-  (let* ((hook-status   (cdr (or (assq hook-sym defhook-hook-status)
-                                 (push (cons hook-sym nil)))))
-         (func-status   (cdr (or (assq func-sym hook-status)
-                                 (push (cons func-sym '(nil nil)))))))
-    (case 'status
-      'created      ()
-    )))
-
-(unless :Comment-Test-Code
-  (progn 
-    (setq foo-mode-hook nil)
-    (defhook hello (foo-mode-hook) (message "hello from foo"))
-    (run-mode-hooks 'foo-mode-hook)
-    )
-
-  (defmacro defhook-body-monitor-begin (hook-sym func-sym)
-    (message "defhook-body-monitor beginning: Running `%s' from hook `%s'." 
-             func-sym hook-sym))
-)
-)
