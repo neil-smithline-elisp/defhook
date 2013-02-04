@@ -137,6 +137,8 @@
 ;; 
 ;;; Code:
 
+(require 'assert-rtn)
+
 (defgroup defhook nil "Define mode hooks wherever you want." 
   :link '(function-link defhook))
 
